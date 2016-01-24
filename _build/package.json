@@ -1,0 +1,14 @@
+{
+  "name": "tetris",
+  "version": "0.0.0",
+  "description": "Tetris HTML5 Canvas Game",
+  "main": "_build/gruntfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "JP DeVries",
+  "license": "MIT",
+  "devDependencies": {
+    "grunt-browserify": "^4.0.1"
+  }
+}

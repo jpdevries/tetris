@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Tetris</title>
+    <style type="text/css">
+      #canvas, form {
+        position:fixed;
+        top:0;
+        left:0;
+        right:0;
+        bottom:0;
+      }
+      form {
+        padding:1em;
+        z-index:9999;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <form onsubmit="return false;">
+      <label for="draw-a-shape"><button id="draw-a-shape">Draw a Shape</button></label>
+    </form>
+    <script src="assets/js/app.js"></script>
+  </body>
+</html>
