@@ -1,5 +1,3 @@
-var square = require('../entities/square');
-
 var GraphicsSystem = function(entities,canvas) {
   this.entities = entities;
 
@@ -13,9 +11,25 @@ GraphicsSystem.prototype.run = function() {
 };
 
 GraphicsSystem.prototype.tick = function() {
-  console.log('tick');
+  var canvas = this.canvas;
+  var ctx = this.context;
 
-  var sq = new square.Square();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.save();
+
+  ctx.translate(canvas.width/2,canvas.height);
+  ctx.scale(canvas.height,-canvas.height);
+
+  for(var i = 0; i < this.entities.length; i++) {
+    var entity = this.entities[i];
+    if (!'graphics' in entity.components) continue;
+    entity.components.graphics.draw(ctx);
+  }
+
+  ctx.restore();
+
+  window.requestAnimationFrame(this.tick.bind(this));
 }
 
 exports.GraphicsSystem = GraphicsSystem;
