@@ -1,30 +1,47 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var ShapeGraphicsComponent = function(entity,tiles,blockSize) {
+var ShapeGraphicsComponent = function(entity,color,rotation,blockSize) {
   this.entity = entity;
-  this.tiles = tiles;
+  this.color = typeof(color)  == 'undefined' ? 'black' : color;
+  this.rotation = typeof(rotation) == 'undefined' ? 0 : rotation;
   this.blockSize = typeof(blockSize) == 'undefined' ? 0.02 : blockSize;
 }
 
 ShapeGraphicsComponent.prototype.draw = function (context) {
   var position = this.entity.components.physics.position;
-  var tiles = this.tiles,
+
+  var tiles = this.entity.getCurrentMatrix(),
   blockSize = this.blockSize;
+
+  //console.log(this.entity.matrixIndex);
 
   context.save();
 
   context.translate(position.x, position.y);
 
+  //context.translate(position.x, position.y+(blockSize*2));
+  //context.rotate(Math.degreesToRadians(this.rotation));
+  //context.translate(-blockSize*2,-blockSize*2);
+
   for(var i = 0; i < tiles.length; i+=4) { // go through the 16 tiles 4 at a time
     (function(tiles){
       context.save();
       for(var i = 0; i < tiles.length; i++) {
-        if(tiles[i]) context.fillRect(0, 0, blockSize, blockSize); // paint tile
+        context.fillStyle = (tiles[i]) ? 'black' : 'red';
+        context.fillRect(0, 0, blockSize, blockSize); // paint tile
         context.translate(blockSize,0); // move to the right (next column)
       }
       context.restore(); // back to the left
-    })(tiles.slice(i,i+3)); // slice out the next four blocks and loop through them one by one
+    })(tiles.slice(i,i+4)); // slice out the next four blocks and loop through them one by one
     context.translate(0,blockSize); // move down (next row)
   }
+
+
+
+
+
+  //context.translate(0,-blockSize*2);
+  //context.rotate(Math.degreesToRadians(this.rotation));
+
   context.restore();
 };
 
@@ -46,16 +63,14 @@ var PhysicsComponent = function(entity) {
     };
     this.acceleration = {
         x: 0,
-        y: 0
+        y: 1
     };
 };
 
-PhysicsComponent.prototype.update = function(delta) {
-    //this.velocity.x += this.acceleration.x * delta;
-    this.velocity.y += this.acceleration.y * delta;
+PhysicsComponent.prototype.update = function() {
 
     //this.position.x += this.velocity.x * delta;
-    this.position.y += this.velocity.y * delta;
+    this.position.y = Math.max(0,this.position.y - (.02*this.acceleration.y));
 };
 
 exports.PhysicsComponent = PhysicsComponent;
@@ -64,14 +79,33 @@ exports.PhysicsComponent = PhysicsComponent;
 var shape = require('./shape');
 
 function JShape() {
-  console.log('jshape');
+
 }
 
 JShape.prototype = new shape.Shape([
-  0,1,1,0,
-  0,1,0,0,
-  0,1,0,0,
-  0,0,0,0
+  [
+    0,1,1,0,
+    0,1,0,0,
+    0,1,0,0,
+    0,0,0,0
+  ],
+  [
+    0,0,0,0,
+    1,1,1,0,
+    0,0,1,0,
+    0,0,0,0
+  ],
+  [
+    0,1,0,0,
+    0,1,0,0,
+    1,1,0,0,
+    0,0,0,0
+  ],[
+    1,0,0,0,
+    1,1,1,0,
+    0,0,0,0,
+    0,0,0,0
+  ]
 ]);
 JShape.prototype.constructor = JShape;
 
@@ -81,14 +115,33 @@ exports.JShape = JShape;
 var shape = require('./shape');
 
 function Line() {
-  console.log('line');
 }
 
 Line.prototype = new shape.Shape([
-  0,1,0,0,
-  0,1,0,0,
-  0,1,0,0,
-  0,1,0,0
+  [
+    0,1,0,0,
+    0,1,0,0,
+    0,1,0,0,
+    0,1,0,0
+  ],
+  [
+    0,0,0,0,
+    1,1,1,1,
+    0,0,0,0,
+    0,0,0,0
+  ],
+  [
+    0,0,1,0,
+    0,0,1,0,
+    0,0,1,0,
+    0,0,1,0
+  ],
+  [
+    0,0,0,0,
+    0,0,0,0,
+    1,1,1,1,
+    0,0,0,0
+  ]
 ]);
 Line.prototype.constructor = Line;
 
@@ -98,14 +151,33 @@ exports.Line = Line;
 var shape = require('./shape');
 
 function LShape() {
-  console.log('lshape');
 }
 
 LShape.prototype = new shape.Shape([
-  1,1,0,0,
-  0,1,0,0,
-  0,1,0,0,
-  0,0,0,0
+  [
+    1,1,0,0,
+    0,1,0,0,
+    0,1,0,0,
+    0,0,0,0
+  ],
+  [
+    0,0,1,0,
+    1,1,1,0,
+    0,0,0,0,
+    0,0,0,0
+  ],
+  [
+    0,1,0,0,
+    0,1,0,0,
+    0,1,1,0,
+    0,0,0,0
+  ],
+  [
+    0,0,0,0,
+    1,1,1,0,
+    1,0,0,0,
+    0,0,0,0
+  ]
 ]);
 LShape.prototype.constructor = LShape;
 
@@ -115,26 +187,71 @@ exports.LShape = LShape;
 var graphicsComponent = require("../components/graphics/shape");
 var physicsComponent = require("../components/physics/physics");
 
-var Shape = function(matrix) {
+var Shape = function(matrices,blockSize) {
+  matrices = typeof(matrices) == 'undefined' ? [
+    [
+      0,0,0,0,
+      0,1,1,0,
+      0,1,1,0,
+      0,0,0,0
+    ],
+    [
+      0,0,0,0,
+      0,1,1,0,
+      0,1,1,0,
+      0,0,0,0
+    ],
+    [
+      0,0,0,0,
+      0,1,1,0,
+      0,1,1,0,
+      0,0,0,0
+    ],
+    [
+      0,0,0,0,
+      0,1,1,0,
+      0,1,1,0,
+      0,0,0,0
+    ]
+  ] : matrices;
+
+  blockSize = typeof(blockSize) == 'undefined' ? 0.02 : blockSize;
+
+  var that = this;
+
+  this.matrices = matrices;
+  this.matrixIndex = 0;
+
+  this.getCurrentMatrix = function() {
+    return that.matrices[that.matrixIndex];
+  }
+
   var physics = new physicsComponent.PhysicsComponent(this);
-  matrix = typeof(matrix) == 'undefined' ? [
-    0,0,0,0,
-    0,1,1,0,
-    0,1,1,0,
-    0,0,0,0
-  ] : matrix;
   physics.position.y = 1;
-  physics.acceleration.y = -0.075;
+  //physics.acceleration.y = -0.075;
 
-  console.log('creating a shape');
+  this.blockSize = blockSize;
 
-  this.matrix = matrix;
-
-  var graphics = new graphicsComponent.ShapeGraphicsComponent(this,this.matrix);
+  var graphics = new graphicsComponent.ShapeGraphicsComponent(this,this.blockSize);
   this.components = {
     physics: physics,
     graphics: graphics
   };
+  this.rotate = function(amnt) {
+    var position = physics.position;
+    that.matrixIndex += amnt;
+
+    if(that.matrixIndex > 3) that.matrixIndex = 0;
+    //if(!physics.position.y) return;  // once they hit the ground they die
+    //this.components.graphics.rotation += amnt;
+
+  }
+  this.translate = function(x,y) {
+    var position = physics.position;
+    //if(!position.y) return; // once they hit the ground they die
+    position.x += x*blockSize;
+    position.y += y*blockSize;
+  }
 }
 
 exports.Shape = Shape;
@@ -143,7 +260,6 @@ exports.Shape = Shape;
 var shape = require('./shape');
 
 function Square() {
-  console.log('square');
 }
 
 Square.prototype = new shape.Shape();
@@ -155,14 +271,33 @@ exports.Square = Square;
 var shape = require('./shape');
 
 function SShape() {
-  console.log('sshape');
 }
 
 SShape.prototype = new shape.Shape([
-  1,0,0,0,
-  1,1,0,0,
-  0,1,0,0,
-  0,0,0,0
+  [
+    1,0,0,0,
+    1,1,0,0,
+    0,1,0,0,
+    0,0,0,0
+  ],
+  [
+    0,1,1,0,
+    1,1,0,0,
+    0,0,0,0,
+    0,0,0,0
+  ],
+  [
+    0,1,0,0,
+    0,1,1,0,
+    0,0,1,0,
+    0,0,0,0
+  ],
+  [
+    0,0,0,0,
+    0,1,1,0,
+    1,1,0,0,
+    0,0,0,0
+  ]
 ]);
 SShape.prototype.constructor = SShape;
 
@@ -172,14 +307,33 @@ exports.SShape = SShape;
 var shape = require('./shape');
 
 function Tee() {
-  console.log('tee');
 }
 
 Tee.prototype = new shape.Shape([
-  0,1,0,0,
-  1,1,1,0,
-  0,0,0,0,
-  0,0,0,0
+  [
+    0,1,0,0,
+    1,1,1,0,
+    0,0,0,0,
+    0,0,0,0
+  ],
+  [
+    0,1,0,0,
+    0,1,1,0,
+    0,1,0,0,
+    0,0,0,0
+  ],
+  [
+    0,0,0,0,
+    1,1,1,0,
+    0,1,0,0,
+    0,0,0,0
+  ],
+  [
+    0,1,0,0,
+    1,1,0,0,
+    0,1,0,0,
+    0,0,0,0
+  ]
 ]);
 Tee.prototype.constructor = Tee;
 
@@ -189,14 +343,33 @@ exports.Tee = Tee;
 var shape = require('./shape');
 
 function ZShape() {
-  console.log('zshape');
 }
 
 ZShape.prototype = new shape.Shape([
-  0,1,0,0,
-  1,1,0,0,
-  1,0,0,0,
-  0,0,0,0
+  [
+    0,1,0,0,
+    1,1,0,0,
+    1,0,0,0,
+    0,0,0,0
+  ],
+  [
+    1,1,0,0,
+    0,1,1,0,
+    0,0,0,0,
+    0,0,0,0
+  ],
+  [
+    0,0,1,0,
+    0,1,1,0,
+    0,1,0,0,
+    0,0,0,0
+  ],
+  [
+    0,0,0,0,
+    1,1,0,0,
+    0,1,1,0,
+    0,0,0,0
+  ]
 ]);
 ZShape.prototype.constructor = ZShape;
 
@@ -210,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function() {
     app.run();
 });
 
-},{"./tetris":14}],12:[function(require,module,exports){
+},{"./tetris":16}],12:[function(require,module,exports){
 var GraphicsSystem = function(entities,canvas) {
   this.entities = entities;
 
@@ -235,7 +408,7 @@ GraphicsSystem.prototype.tick = function() {
   ctx.scale(canvas.height,-canvas.height);
 
   for(var i = 0; i < this.entities.length; i++) {
-    var entity = this.entities[i];
+    var entity = this.entities[i]; 
     if (!'graphics' in entity.components) continue;
     entity.components.graphics.draw(ctx);
   }
@@ -248,6 +421,49 @@ GraphicsSystem.prototype.tick = function() {
 exports.GraphicsSystem = GraphicsSystem;
 
 },{}],13:[function(require,module,exports){
+var InputSystem = function(tetris,canvas) {
+  this.tetris = tetris;
+  this.entities = tetris.entities;
+  this.canvas = canvas;
+};
+
+InputSystem.prototype.run = function() {
+  this.canvas.addEventListener('click',this.onClick.bind(this));
+  document.body.addEventListener('keydown',this.onkeydown.bind(this));
+  document.body.addEventListener('keyup',this.onkeyup.bind(this));
+};
+
+InputSystem.prototype.onClick = function() {
+  this.tetris.shapes.currentShape.rotate(1);
+}
+
+InputSystem.prototype.onkeydown = function(e) {
+  switch(e.keyCode) {
+    case 38: // top
+    this.onClick();
+    break;
+
+    case 39: // right
+    this.tetris.shapes.currentShape.translate(1,0);
+    break;
+
+    case 40: // bottom
+    this.tetris.shapes.currentShape.components.physics.acceleration.y = 2;
+    break;
+
+    case 37: // left
+    this.tetris.shapes.currentShape.translate(-1,0);
+    break;
+  }
+};
+
+InputSystem.prototype.onkeyup = function(e) {
+  this.tetris.shapes.currentShape.components.physics.acceleration.y = 1;
+}
+
+exports.InputSystem = InputSystem;
+
+},{}],14:[function(require,module,exports){
 var PhysicsSystem = function(entities) {
     this.entities = entities;
     this.interval = null;
@@ -255,7 +471,7 @@ var PhysicsSystem = function(entities) {
 
 PhysicsSystem.prototype.run = function() {
     // Run the update loop
-    this.interval = window.setInterval(this.tick.bind(this), 1000 /60);
+    this.interval = window.setInterval(this.tick.bind(this), 1000 /12);
 };
 
 PhysicsSystem.prototype.tick = function() {
@@ -263,69 +479,81 @@ PhysicsSystem.prototype.tick = function() {
         var entity = this.entities[i];
         if (!'physics' in entity.components) continue;
 
-        entity.components.physics.update(1/60);
+        entity.components.physics.update();
     }
 };
 
 exports.PhysicsSystem = PhysicsSystem;
 
-},{}],14:[function(require,module,exports){
-var canvas = document.getElementById('canvas'),
-ctx = canvas.getContext('2d'),
-drawAShape = document.getElementById('draw-a-shape');
+},{}],15:[function(require,module,exports){
+var shape = require('../entities/shape');
+var jshape = require('../entities/jshape');
+var line = require('../entities/line');
+var lshape = require('../entities/lshape');
+var square = require('../entities/square');
+var sshape = require('../entities/sshape');
+var tee = require('../entities/tee');
+var zshape = require('../entities/zshape');
 
-var shapes = {
-  line:[
-    0,1,0,0,
-    0,1,0,0,
-    0,1,0,0,
-    0,1,0,0
-  ],
-  square:[
-    0,0,0,0,
-    0,1,1,0,
-    0,1,1,0,
-    0,0,0,0
-  ],
-  lshape:[
-    1,1,0,0,
-    0,1,0,0,
-    0,1,0,0,
-    0,0,0,0
-  ],
-  jshape:[
-    0,1,1,0,
-    0,1,0,0,
-    0,1,0,0,
-    0,0,0,0
-  ],
-  tee:[
-    0,1,0,0,
-    1,1,1,0,
-    0,0,0,0,
-    0,0,0,0
-  ],
-  zshape:[
-    0,1,0,0,
-    1,1,0,0,
-    1,0,0,0,
-    0,0,0,0
-  ],
-  sshape:[
-    1,0,0,0,
-    1,1,0,0,
-    0,1,0,0,
-    0,0,0,0
-  ]
+var ShapeSystem = function(entities,canvas) {
+  this.entities = entities;
+  this.canvas = canvas;
+  this.interval = null;
+  this.currentShape = null;
+}
+
+ShapeSystem.prototype.run = function() {
+  this.tick();
 };
 
+ShapeSystem.prototype.pause = function() {
+  if(this.interval != null) {
+    window.clearInterval(this.interval);
+    this.interval = null;
+  }
+}
 
+ShapeSystem.prototype.tick = function() {
+  var possibleShapes = [
+    new jshape.JShape(),
+    new line.Line(),
+    new lshape.LShape(),
+    new square.Square(),
+    new tee.Tee(),
+    new zshape.ZShape()
+  ];
+
+  var newShape = possibleShapes[Math.round(Math.random() * (possibleShapes.length-1))];
+  newShape.components.physics.position.y = 1;
+
+  this.entities.push(newShape);
+
+  this.currentShape = newShape;
+};
+
+exports.ShapeSystem = ShapeSystem;
+
+},{"../entities/jshape":3,"../entities/line":4,"../entities/lshape":5,"../entities/shape":6,"../entities/square":7,"../entities/sshape":8,"../entities/tee":9,"../entities/zshape":10}],16:[function(require,module,exports){
 Math.randomRange = function(min,max) {
   return min + Math.random() * (max-min);
 }
 
+Math.degreesToRadians = function(degrees) {
+  return degrees * Math.PI / 180;
+}
+
+Math.radiansToDegrees = function(radians) {
+  return radians * 180 / Math.PI;
+}
+
+var canvas = document.getElementById('canvas'),
+ctx = canvas.getContext('2d'),
+drawAShape = document.getElementById('draw-a-shape');
+
 var graphicsSystem = require('./systems/graphics');
 var physicsSystem = require('./systems/physics');
+var inputSystem = require('./systems/input');
+var shapeSystem = require('./systems/shape_system');
 
 var shape = require('./entities/shape');
 var jshape = require('./entities/jshape');
@@ -337,25 +565,20 @@ var tee = require('./entities/tee');
 var zshape = require('./entities/zshape');
 
 var Tetris = function() {
-  var possibleShapes = [
-    new jshape.JShape(),
-    new line.Line(),
-    new lshape.LShape(),
-    new square.Square(),
-    new tee.Tee(),
-    new zshape.ZShape()
-];
+  //this.currentShape = possibleShapes[Math.round(Math.random() * (possibleShapes.length-1))];
+  this.entities = [];
 
-  this.entities = [possibleShapes[Math.round(Math.random() * (possibleShapes.length-1))]];
-  console.log('tetris');
   this.graphics = new graphicsSystem.GraphicsSystem(this.entities,canvas);
   this.physics = new physicsSystem.PhysicsSystem(this.entities);
+  this.input = new inputSystem.InputSystem(this,canvas);
+  this.shapes = new shapeSystem.ShapeSystem(this.entities,canvas);
 };
 
 Tetris.prototype.run = function() {
-  console.log('run');
   this.graphics.run();
   this.physics.run();
+  this.input.run();
+  this.shapes.run();
 }
 
 exports.Tetris = Tetris;
@@ -370,4 +593,4 @@ function handleResize() {
   canvas.height = window.innerHeight;
 }
 
-},{"./entities/jshape":3,"./entities/line":4,"./entities/lshape":5,"./entities/shape":6,"./entities/square":7,"./entities/sshape":8,"./entities/tee":9,"./entities/zshape":10,"./systems/graphics":12,"./systems/physics":13}]},{},[11]);
+},{"./entities/jshape":3,"./entities/line":4,"./entities/lshape":5,"./entities/shape":6,"./entities/square":7,"./entities/sshape":8,"./entities/tee":9,"./entities/zshape":10,"./systems/graphics":12,"./systems/input":13,"./systems/physics":14,"./systems/shape_system":15}]},{},[11]);

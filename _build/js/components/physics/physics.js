@@ -11,16 +11,14 @@ var PhysicsComponent = function(entity) {
     };
     this.acceleration = {
         x: 0,
-        y: 0
+        y: 1
     };
 };
 
-PhysicsComponent.prototype.update = function(delta) {
-    //this.velocity.x += this.acceleration.x * delta;
-    this.velocity.y += this.acceleration.y * delta;
+PhysicsComponent.prototype.update = function() {
 
     //this.position.x += this.velocity.x * delta;
-    this.position.y += this.velocity.y * delta;
+    this.position.y = Math.max(0,this.position.y - (.02*this.acceleration.y));
 };
 
 exports.PhysicsComponent = PhysicsComponent;

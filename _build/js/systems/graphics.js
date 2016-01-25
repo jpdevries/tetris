@@ -22,7 +22,7 @@ GraphicsSystem.prototype.tick = function() {
   ctx.scale(canvas.height,-canvas.height);
 
   for(var i = 0; i < this.entities.length; i++) {
-    var entity = this.entities[i];
+    var entity = this.entities[i]; 
     if (!'graphics' in entity.components) continue;
     entity.components.graphics.draw(ctx);
   }

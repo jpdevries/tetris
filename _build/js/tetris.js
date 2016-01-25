@@ -1,59 +1,23 @@
-var canvas = document.getElementById('canvas'),
-ctx = canvas.getContext('2d'),
-drawAShape = document.getElementById('draw-a-shape');
-
-var shapes = {
-  line:[
-    0,1,0,0,
-    0,1,0,0,
-    0,1,0,0,
-    0,1,0,0
-  ],
-  square:[
-    0,0,0,0,
-    0,1,1,0,
-    0,1,1,0,
-    0,0,0,0
-  ],
-  lshape:[
-    1,1,0,0,
-    0,1,0,0,
-    0,1,0,0,
-    0,0,0,0
-  ],
-  jshape:[
-    0,1,1,0,
-    0,1,0,0,
-    0,1,0,0,
-    0,0,0,0
-  ],
-  tee:[
-    0,1,0,0,
-    1,1,1,0,
-    0,0,0,0,
-    0,0,0,0
-  ],
-  zshape:[
-    0,1,0,0,
-    1,1,0,0,
-    1,0,0,0,
-    0,0,0,0
-  ],
-  sshape:[
-    1,0,0,0,
-    1,1,0,0,
-    0,1,0,0,
-    0,0,0,0
-  ]
-};
-
-
 Math.randomRange = function(min,max) {
   return min + Math.random() * (max-min);
 }
 
+Math.degreesToRadians = function(degrees) {
+  return degrees * Math.PI / 180;
+}
+
+Math.radiansToDegrees = function(radians) {
+  return radians * 180 / Math.PI;
+}
+
+var canvas = document.getElementById('canvas'),
+ctx = canvas.getContext('2d'),
+drawAShape = document.getElementById('draw-a-shape');
+
 var graphicsSystem = require('./systems/graphics');
 var physicsSystem = require('./systems/physics');
+var inputSystem = require('./systems/input');
+var shapeSystem = require('./systems/shape_system');
 
 var shape = require('./entities/shape');
 var jshape = require('./entities/jshape');
@@ -65,25 +29,20 @@ var tee = require('./entities/tee');
 var zshape = require('./entities/zshape');
 
 var Tetris = function() {
-  var possibleShapes = [
-    new jshape.JShape(),
-    new line.Line(),
-    new lshape.LShape(),
-    new square.Square(),
-    new tee.Tee(),
-    new zshape.ZShape()
-];
+  //this.currentShape = possibleShapes[Math.round(Math.random() * (possibleShapes.length-1))];
+  this.entities = [];
 
-  this.entities = [possibleShapes[Math.round(Math.random() * (possibleShapes.length-1))]];
-  console.log('tetris');
   this.graphics = new graphicsSystem.GraphicsSystem(this.entities,canvas);
   this.physics = new physicsSystem.PhysicsSystem(this.entities);
+  this.input = new inputSystem.InputSystem(this,canvas);
+  this.shapes = new shapeSystem.ShapeSystem(this.entities,canvas);
 };
 
 Tetris.prototype.run = function() {
-  console.log('run');
   this.graphics.run();
   this.physics.run();
+  this.input.run();
+  this.shapes.run();
 }
 
 exports.Tetris = Tetris;

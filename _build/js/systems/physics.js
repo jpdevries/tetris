@@ -5,7 +5,7 @@ var PhysicsSystem = function(entities) {
 
 PhysicsSystem.prototype.run = function() {
     // Run the update loop
-    this.interval = window.setInterval(this.tick.bind(this), 1000 /60);
+    this.interval = window.setInterval(this.tick.bind(this), 1000 /12);
 };
 
 PhysicsSystem.prototype.tick = function() {
@@ -13,7 +13,7 @@ PhysicsSystem.prototype.tick = function() {
         var entity = this.entities[i];
         if (!'physics' in entity.components) continue;
 
-        entity.components.physics.update(1/60);
+        entity.components.physics.update();
     }
 };
 
