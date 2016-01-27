@@ -1,33 +1,35 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var ShapeGraphicsComponent = function(entity,color,rotation,blockSize) {
   this.entity = entity;
-  this.color = typeof(color)  == 'undefined' ? 'black' : color;
+  this.color = typeof(color)  == 'undefined' ? randomColor() : color;
   this.rotation = typeof(rotation) == 'undefined' ? 0 : rotation;
   this.blockSize = typeof(blockSize) == 'undefined' ? 0.02 : blockSize;
 }
 
 ShapeGraphicsComponent.prototype.draw = function (context) {
+  var canvas = document.getElementById("canvas");
   var position = this.entity.components.physics.position;
 
   var tiles = this.entity.getCurrentMatrix(),
-  blockSize = this.blockSize;
+  blockSize = this.blockSize,
+  color = this.color;
 
   //console.log(this.entity.matrixIndex);
 
   context.save();
 
-  context.translate(position.x, position.y);
+  context.translate(position.x-(0.02*2), position.y);
 
   //context.translate(position.x, position.y+(blockSize*2));
   //context.rotate(Math.degreesToRadians(this.rotation));
   //context.translate(-blockSize*2,-blockSize*2);
 
-  for(var i = 0; i < tiles.length; i+=4) { // go through the 16 tiles 4 at a time
+  for(var i = 0; i <= tiles.length-4; i+=4) { // go through the 16 tiles 4 at a time
     (function(tiles){
       context.save();
       for(var i = 0; i < tiles.length; i++) {
-        context.fillStyle = (tiles[i]) ? 'black' : 'red';
-        context.fillRect(0, 0, blockSize, blockSize); // paint tile
+        context.fillStyle = (tiles[i]) ? color : 'transparent';
+        if((tiles[i])) context.fillRect(0, 0, blockSize, blockSize); // paint tile
         context.translate(blockSize,0); // move to the right (next column)
       }
       context.restore(); // back to the left
@@ -43,9 +45,13 @@ ShapeGraphicsComponent.prototype.draw = function (context) {
   //context.rotate(Math.degreesToRadians(this.rotation));
 
   context.restore();
+
+
 };
 
-
+function randomColor() {
+  return '#'+Math.floor(Math.random()*16777215).toString(16);
+}
 
 exports.ShapeGraphicsComponent = ShapeGraphicsComponent;
 
@@ -70,7 +76,7 @@ var PhysicsComponent = function(entity) {
 PhysicsComponent.prototype.update = function() {
 
     //this.position.x += this.velocity.x * delta;
-    this.position.y = Math.max(0,this.position.y - (.02*this.acceleration.y));
+    this.position.y = Math.max(-.02*4,this.position.y - (.02*this.acceleration.y));
 };
 
 exports.PhysicsComponent = PhysicsComponent;
@@ -232,7 +238,7 @@ var Shape = function(matrices,blockSize) {
 
   this.blockSize = blockSize;
 
-  var graphics = new graphicsComponent.ShapeGraphicsComponent(this,this.blockSize);
+  var graphics = new graphicsComponent.ShapeGraphicsComponent(this);
   this.components = {
     physics: physics,
     graphics: graphics
@@ -400,25 +406,123 @@ GraphicsSystem.prototype.tick = function() {
   var canvas = this.canvas;
   var ctx = this.context;
 
+  ctx.globalCompositeOperation = "multiply";
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  //ctx.fillStyle = 'orange';
+  //ctx.fillRect(canvas.width/2,0,0.02*4 * canvas.height,canvas.height);
 
   ctx.save();
 
   ctx.translate(canvas.width/2,canvas.height);
   ctx.scale(canvas.height,-canvas.height);
 
+  var offscreen = document.getElementById('offscreen'),
+  offscreenContext = offscreen.getContext('2d');
+
+
+
   for(var i = 0; i < this.entities.length; i++) {
-    var entity = this.entities[i]; 
+
+    var entity = this.entities[i];
     if (!'graphics' in entity.components) continue;
+    var position = entity.components.physics.position;
+
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(-1,0,2,.02*1);
+
+    var cut = { // getImageData ignores the transformation coordinates so we have to convert our custom units back to px
+      x: Math.ceil(canvas.width/2-((.02*2) * canvas.height-(position.x*canvas.height))),
+      y: Math.ceil(canvas.height-(((.02 * (4-0))+position.y)*canvas.height)),
+      w: Math.ceil(0.02*4 * canvas.height),
+      h: Math.ceil((.02*4)*canvas.height)
+    };
+
+    var well = (function(){ // slice out the portion of our well that falls within the bounding box of the shape, if any
+      var imgData = ctx.getImageData(cut.x,cut.y,cut.w,cut.h);
+      return imgData;
+    })();
+
+    ctx.clearRect(-1, 0, 2, 1);
+    ctx.globalCompositeOperation = "multiply";
+
     entity.components.graphics.draw(ctx);
+
+    var piece = (function(){
+      var imgData=ctx.getImageData(cut.x,cut.y,cut.w,cut.h);
+      return imgData;
+    })();
+
+    well = colorizeImageData(well,[255,0,0,255]);
+    piece = colorizeImageData(piece,[0,255,0,255]);
+
+    offscreenContext.clearRect(0,0,offscreen.width,offscreen.height);
+    offscreenContext.globalCompositeOperation = "multiply";
+
+    offscreenContext.drawImage(dataURLtoImg(imgDataToDataURL(well)),0,0);
+    offscreenContext.drawImage(dataURLtoImg(imgDataToDataURL(piece)),0,2); // allow for a 2px "offset" we scootch the shape 2px down further than we shoot so it detects in time and to account for anti-aliasing weirdness
+
+    var isCollision = (function(){
+      var imgData = offscreenContext.getImageData(0,0,offscreen.width,offscreen.height);
+      var data = imgData.data;
+      for(var i = 0; i <= data.length - 4; i+=4) {
+        var isRed = (data[i] == 255 && !data[i+1] && !data[i+2]),
+        isGreen = (!data[i] && data[i+1] == 255 && !data[i+2]),
+        isNothing = (data[i] == 0 && data[i+1] == 0 && data[i+2] == 0 && data[i+3] == 0);
+
+         if(!isRed && !isGreen && !isNothing) {
+           console.log(data[i],data[i+1],data[i+2],data[i+3]);
+           return true;
+         }
+      }
+      return false;
+    })();
+
+    // draw the well
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(-1,0,2,.02*1);
+
   }
 
   ctx.restore();
 
-  window.requestAnimationFrame(this.tick.bind(this));
+  //
+  if(!isCollision) window.requestAnimationFrame(this.tick.bind(this));
 }
 
 exports.GraphicsSystem = GraphicsSystem;
+
+function colorizeImageData(imgData,color) {
+  var data = imgData.data;
+  for(var i = 0; i <= data.length-4; i+=4) {
+    if(!(!data[i] && !data[i+1] && !data[i+2] && !data[i+3])) {
+
+      data[i] = color[0];
+      data[i+1] = color[1];
+      data[i+2] = color[2];
+      data[i+3] = color[3];
+    }
+  }
+  return imgData;
+}
+
+function imgDataToDataURL(imgData) {
+  var c = document.createElement('canvas');
+
+  c.width = imgData.width;
+  c.height = imgData.height;
+
+  c.getContext('2d').putImageData(imgData,0,0);
+  return c.toDataURL();
+}
+
+function dataURLtoImg(dataURL) {
+    var img = new Image();
+
+    img.src = dataURL;
+    return img;
+}
 
 },{}],13:[function(require,module,exports){
 var InputSystem = function(tetris,canvas) {
