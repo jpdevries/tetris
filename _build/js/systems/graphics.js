@@ -37,8 +37,7 @@ GraphicsSystem.prototype.tick = function() {
     if (!'graphics' in entity.components) continue;
     var position = entity.components.physics.position;
 
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(-1,0,2,.02*1);
+    drawWell();
 
     var cut = { // getImageData ignores the transformation coordinates so we have to convert our custom units back to px
       x: Math.ceil(canvas.width/2-((.02*2) * canvas.height-(position.x*canvas.height))),
@@ -87,9 +86,13 @@ GraphicsSystem.prototype.tick = function() {
       return false;
     })();
 
-    // draw the well
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(-1,0,2,.02*1);
+    drawWell();
+
+    function drawWell() {
+      // draw the well
+      ctx.fillStyle = 'blue';
+      ctx.fillRect(-1,0,2,(0.02)*10); 
+    }
 
   }
 
