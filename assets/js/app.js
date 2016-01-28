@@ -516,7 +516,7 @@ GraphicsSystem.prototype.tick = function() {
         isNothing = (data[i] == 0 && data[i+1] == 0 && data[i+2] == 0 && data[i+3] == 0);
 
          if(!isRed && !isGreen && !isNothing) {
-           console.log(data[i],data[i+1],data[i+2],data[i+3]);
+           //console.log(data[i],data[i+1],data[i+2],data[i+3]);
            collisionOccured = true;
            return true;
          }
@@ -528,9 +528,9 @@ GraphicsSystem.prototype.tick = function() {
 
     if(isCollision)  {
       entity.collided = true;
-      entity = null;
-      this.entities[i] = null;
-      break;
+      //entity = null;
+      //this.entities[i] = null;
+      //break;
 
     } else {
 
@@ -549,7 +549,7 @@ GraphicsSystem.prototype.tick = function() {
   window.requestAnimationFrame(this.tick.bind(this));
 
   if(collisionOccured) {
-    this.entities = this.entities.filter(function(val) { return val !== null; }).join(", ");
+    //this.entities = this.entities.filter(function(val) { return val !== null; }).join(", ");
   }
 
 
