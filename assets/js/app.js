@@ -50,7 +50,15 @@ ShapeGraphicsComponent.prototype.draw = function (context) {
 };
 
 function randomColor() {
-  return '#'+Math.floor(Math.random()*16777215).toString(16);
+  var colors = ['#fee109',
+  '#ff6113',
+  '#0036fb',
+  '#fe0005',
+  '#31cbff',
+  '#38cd00'];
+
+  return colors[Math.round(Math.random() * (colors.length-1))];
+  //return '#'+Math.floor(Math.random()*16777215).toString(16);
 }
 
 exports.ShapeGraphicsComponent = ShapeGraphicsComponent;
@@ -227,6 +235,7 @@ var Shape = function(matrices,blockSize) {
 
   this.matrices = matrices;
   this.matrixIndex = 0;
+  this.collided = false;
 
   this.getCurrentMatrix = function() {
     return that.matrices[that.matrixIndex];
@@ -348,6 +357,42 @@ exports.Tee = Tee;
 },{"./shape":6}],10:[function(require,module,exports){
 var shape = require('./shape');
 
+function TShape() {
+}
+
+TShape.prototype = new shape.Shape([
+  [
+    1,1,1,0,
+    0,1,0,0,
+    0,1,0,0,
+    0,1,0,0
+  ],
+  [
+    0,0,0,1,
+    1,1,1,1,
+    0,0,0,1,
+    0,0,0,0
+  ],
+  [
+    0,1,0,0,
+    0,1,0,0,
+    0,1,0,0,
+    1,1,1,0
+  ],
+  [
+    1,0,0,0,
+    1,1,1,1,
+    1,0,0,0,
+    0,0,0,0
+  ]
+]);
+TShape.prototype.constructor = TShape;
+
+exports.TShape = TShape;
+
+},{"./shape":6}],11:[function(require,module,exports){
+var shape = require('./shape');
+
 function ZShape() {
 }
 
@@ -381,7 +426,7 @@ ZShape.prototype.constructor = ZShape;
 
 exports.ZShape = ZShape;
 
-},{"./shape":6}],11:[function(require,module,exports){
+},{"./shape":6}],12:[function(require,module,exports){
 var tetris = require('./tetris');
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -389,7 +434,7 @@ document.addEventListener('DOMContentLoaded', function() {
     app.run();
 });
 
-},{"./tetris":16}],12:[function(require,module,exports){
+},{"./tetris":17}],13:[function(require,module,exports){
 var GraphicsSystem = function(entities,canvas) {
   this.entities = entities;
 
@@ -408,7 +453,7 @@ GraphicsSystem.prototype.tick = function() {
 
   ctx.globalCompositeOperation = "multiply";
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height); // right here
 
   //ctx.fillStyle = 'orange';
   //ctx.fillRect(canvas.width/2,0,0.02*4 * canvas.height,canvas.height);
@@ -422,7 +467,7 @@ GraphicsSystem.prototype.tick = function() {
   offscreenContext = offscreen.getContext('2d');
 
 
-
+  var collisionOccured = false;
   for(var i = 0; i < this.entities.length; i++) {
 
     var entity = this.entities[i];
@@ -472,6 +517,7 @@ GraphicsSystem.prototype.tick = function() {
 
          if(!isRed && !isGreen && !isNothing) {
            console.log(data[i],data[i+1],data[i+2],data[i+3]);
+           collisionOccured = true;
            return true;
          }
       }
@@ -480,18 +526,38 @@ GraphicsSystem.prototype.tick = function() {
 
     drawWell();
 
+    if(isCollision)  {
+      entity.collided = true;
+      entity = null;
+      this.entities[i] = null;
+      break;
+
+    } else {
+
+    }
+
+
+
     function drawWell() {
       // draw the well
       ctx.fillStyle = 'blue';
-      ctx.fillRect(-1,0,2,(0.02)*10); 
+      ctx.fillRect(-1,0,2,(0.02)*10);
     }
 
   }
 
+  window.requestAnimationFrame(this.tick.bind(this));
+
+  if(collisionOccured) {
+    this.entities = this.entities.filter(function(val) { return val !== null; }).join(", ");
+  }
+
+
   ctx.restore();
 
-  //
-  if(!isCollision) window.requestAnimationFrame(this.tick.bind(this));
+
+
+
 }
 
 exports.GraphicsSystem = GraphicsSystem;
@@ -527,7 +593,7 @@ function dataURLtoImg(dataURL) {
     return img;
 }
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var InputSystem = function(tetris,canvas) {
   this.tetris = tetris;
   this.entities = tetris.entities;
@@ -570,7 +636,7 @@ InputSystem.prototype.onkeyup = function(e) {
 
 exports.InputSystem = InputSystem;
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 var PhysicsSystem = function(entities) {
     this.entities = entities;
     this.interval = null;
@@ -582,9 +648,10 @@ PhysicsSystem.prototype.run = function() {
 };
 
 PhysicsSystem.prototype.tick = function() {
+  //this.entities.filter(function(val) { return val !== null; }).join(", ");
     for (var i=0; i<this.entities.length; i++) {
         var entity = this.entities[i];
-        if (!'physics' in entity.components) continue;
+        if (!entity  || !'physics' in entity.components || entity.collided) continue;
 
         entity.components.physics.update();
     }
@@ -592,13 +659,14 @@ PhysicsSystem.prototype.tick = function() {
 
 exports.PhysicsSystem = PhysicsSystem;
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var shape = require('../entities/shape');
 var jshape = require('../entities/jshape');
 var line = require('../entities/line');
 var lshape = require('../entities/lshape');
 var square = require('../entities/square');
 var sshape = require('../entities/sshape');
+var tshape = require('../entities/tshape');
 var tee = require('../entities/tee');
 var zshape = require('../entities/zshape');
 
@@ -627,7 +695,8 @@ ShapeSystem.prototype.tick = function() {
     new lshape.LShape(),
     new square.Square(),
     new tee.Tee(),
-    new zshape.ZShape()
+    new zshape.ZShape(),
+    new tshape.TShape()
   ];
 
   var newShape = possibleShapes[Math.round(Math.random() * (possibleShapes.length-1))];
@@ -640,7 +709,7 @@ ShapeSystem.prototype.tick = function() {
 
 exports.ShapeSystem = ShapeSystem;
 
-},{"../entities/jshape":3,"../entities/line":4,"../entities/lshape":5,"../entities/shape":6,"../entities/square":7,"../entities/sshape":8,"../entities/tee":9,"../entities/zshape":10}],16:[function(require,module,exports){
+},{"../entities/jshape":3,"../entities/line":4,"../entities/lshape":5,"../entities/shape":6,"../entities/square":7,"../entities/sshape":8,"../entities/tee":9,"../entities/tshape":10,"../entities/zshape":11}],17:[function(require,module,exports){
 Math.randomRange = function(min,max) {
   return min + Math.random() * (max-min);
 }
@@ -700,4 +769,4 @@ function handleResize() {
   canvas.height = window.innerHeight;
 }
 
-},{"./entities/jshape":3,"./entities/line":4,"./entities/lshape":5,"./entities/shape":6,"./entities/square":7,"./entities/sshape":8,"./entities/tee":9,"./entities/zshape":10,"./systems/graphics":12,"./systems/input":13,"./systems/physics":14,"./systems/shape_system":15}]},{},[11]);
+},{"./entities/jshape":3,"./entities/line":4,"./entities/lshape":5,"./entities/shape":6,"./entities/square":7,"./entities/sshape":8,"./entities/tee":9,"./entities/zshape":11,"./systems/graphics":13,"./systems/input":14,"./systems/physics":15,"./systems/shape_system":16}]},{},[12]);

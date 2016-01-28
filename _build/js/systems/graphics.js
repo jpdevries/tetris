@@ -16,7 +16,7 @@ GraphicsSystem.prototype.tick = function() {
 
   ctx.globalCompositeOperation = "multiply";
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height); // right here
 
   //ctx.fillStyle = 'orange';
   //ctx.fillRect(canvas.width/2,0,0.02*4 * canvas.height,canvas.height);
@@ -30,7 +30,7 @@ GraphicsSystem.prototype.tick = function() {
   offscreenContext = offscreen.getContext('2d');
 
 
-
+  var collisionOccured = false;
   for(var i = 0; i < this.entities.length; i++) {
 
     var entity = this.entities[i];
@@ -80,6 +80,7 @@ GraphicsSystem.prototype.tick = function() {
 
          if(!isRed && !isGreen && !isNothing) {
            console.log(data[i],data[i+1],data[i+2],data[i+3]);
+           collisionOccured = true;
            return true;
          }
       }
@@ -88,18 +89,38 @@ GraphicsSystem.prototype.tick = function() {
 
     drawWell();
 
+    if(isCollision)  {
+      entity.collided = true;
+      entity = null;
+      this.entities[i] = null;
+      break;
+
+    } else {
+
+    }
+
+
+
     function drawWell() {
       // draw the well
       ctx.fillStyle = 'blue';
-      ctx.fillRect(-1,0,2,(0.02)*10); 
+      ctx.fillRect(-1,0,2,(0.02)*10);
     }
 
   }
 
+  window.requestAnimationFrame(this.tick.bind(this));
+
+  if(collisionOccured) {
+    this.entities = this.entities.filter(function(val) { return val !== null; }).join(", ");
+  }
+
+
   ctx.restore();
 
-  //
-  if(!isCollision) window.requestAnimationFrame(this.tick.bind(this));
+
+
+
 }
 
 exports.GraphicsSystem = GraphicsSystem;

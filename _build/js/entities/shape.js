@@ -35,6 +35,7 @@ var Shape = function(matrices,blockSize) {
 
   this.matrices = matrices;
   this.matrixIndex = 0;
+  this.collided = false;
 
   this.getCurrentMatrix = function() {
     return that.matrices[that.matrixIndex];

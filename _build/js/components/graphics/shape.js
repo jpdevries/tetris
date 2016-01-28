@@ -49,7 +49,15 @@ ShapeGraphicsComponent.prototype.draw = function (context) {
 };
 
 function randomColor() {
-  return '#'+Math.floor(Math.random()*16777215).toString(16);
+  var colors = ['#fee109',
+  '#ff6113',
+  '#0036fb',
+  '#fe0005',
+  '#31cbff',
+  '#38cd00'];
+
+  return colors[Math.round(Math.random() * (colors.length-1))];
+  //return '#'+Math.floor(Math.random()*16777215).toString(16);
 }
 
 exports.ShapeGraphicsComponent = ShapeGraphicsComponent;
