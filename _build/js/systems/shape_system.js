@@ -15,6 +15,10 @@ var ShapeSystem = function(entities,canvas) {
 }
 
 ShapeSystem.prototype.run = function() {
+  this.dropShape();
+};
+
+ShapeSystem.prototype.dropShape = function() {
   this.tick();
 };
 
@@ -36,7 +40,7 @@ ShapeSystem.prototype.tick = function() {
   ];
 
   var newShape = possibleShapes[Math.round(Math.random() * (possibleShapes.length-1))];
-  newShape.components.physics.position.y = 1;
+  //newShape.components.physics.position.y = 24;
 
   this.entities.push(newShape);
 

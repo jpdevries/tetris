@@ -29,7 +29,12 @@ var Shape = function(matrices,blockSize) {
     ]
   ] : matrices;
 
-  blockSize = typeof(blockSize) == 'undefined' ? 0.02 : blockSize;
+  blockSize = typeof(blockSize) == 'undefined' ? 1 : blockSize;
+
+  this.blockCoords = {
+    x:0,
+    y:0
+  };
 
   var that = this;
 
@@ -41,7 +46,7 @@ var Shape = function(matrices,blockSize) {
   }
 
   var physics = new physicsComponent.PhysicsComponent(this);
-  physics.position.y = 1;
+  //physics.position.y = 25;
   //physics.acceleration.y = -0.075;
 
   this.blockSize = blockSize;
@@ -58,14 +63,22 @@ var Shape = function(matrices,blockSize) {
     if(that.matrixIndex > 3) that.matrixIndex = 0;
     //if(!physics.position.y) return;  // once they hit the ground they die
     //this.components.graphics.rotation += amnt;
-
-  }
+  };
+  this.getPosition = function() {
+    return physics.position;
+  };
+  this.getBlockCoords = function() {
+    return that.blockCoords;
+  };
   this.translate = function(x,y) {
+    that.blockCoords.x += x;
+    that.blockCoords.y += y;
+
     var position = physics.position;
     //if(!position.y) return; // once they hit the ground they die
-    position.x += x*blockSize;
-    position.y += y*blockSize;
-  }
+    position.x += x;
+    position.y += y;
+  };
 }
 
 exports.Shape = Shape;

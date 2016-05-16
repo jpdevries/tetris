@@ -15,6 +15,10 @@ InputSystem.prototype.onClick = function() {
 }
 
 InputSystem.prototype.onkeydown = function(e) {
+  console.log('keydown');
+
+
+
   switch(e.keyCode) {
     case 38: // top
     this.onClick();

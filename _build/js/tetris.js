@@ -1,15 +1,3 @@
-Math.randomRange = function(min,max) {
-  return min + Math.random() * (max-min);
-}
-
-Math.degreesToRadians = function(degrees) {
-  return degrees * Math.PI / 180;
-}
-
-Math.radiansToDegrees = function(radians) {
-  return radians * 180 / Math.PI;
-}
-
 var canvas = document.getElementById('canvas'),
 ctx = canvas.getContext('2d'),
 drawAShape = document.getElementById('draw-a-shape');
@@ -29,13 +17,17 @@ var tee = require('./entities/tee');
 var zshape = require('./entities/zshape');
 
 var Tetris = function() {
-  //this.currentShape = possibleShapes[Math.round(Math.random() * (possibleShapes.length-1))];
   this.entities = [];
 
   this.graphics = new graphicsSystem.GraphicsSystem(this.entities,canvas);
   this.physics = new physicsSystem.PhysicsSystem(this.entities);
   this.input = new inputSystem.InputSystem(this,canvas);
   this.shapes = new shapeSystem.ShapeSystem(this.entities,canvas);
+
+  this.graphics.on(this.graphics.WOULD_COLLIDE,function(){
+			console.log('WOULD_COLLIDE!!!! 28');
+      this.stop();
+  });
 };
 
 Tetris.prototype.run = function() {
@@ -46,13 +38,3 @@ Tetris.prototype.run = function() {
 }
 
 exports.Tetris = Tetris;
-
-window.onresize = function() {
-  handleResize();
-};
-handleResize();
-
-function handleResize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}

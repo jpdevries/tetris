@@ -1,6 +1,6 @@
 var PhysicsSystem = function(entities) {
     this.entities = entities;
-    this.interval = null;
+    this.interval = null; 
 };
 
 PhysicsSystem.prototype.run = function() {
