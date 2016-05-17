@@ -9,9 +9,10 @@ PhysicsSystem.prototype.run = function() {
 };
 
 PhysicsSystem.prototype.tick = function() {
+  //this.entities.filter(function(val) { return val !== null; }).join(", ");
     for (var i=0; i<this.entities.length; i++) {
         var entity = this.entities[i];
-        if (!'physics' in entity.components) continue;
+        if (!entity  || !'physics' in entity.components || entity.collided) continue;
 
         entity.components.physics.update();
     }

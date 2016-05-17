@@ -40,6 +40,7 @@ var Shape = function(matrices,blockSize) {
 
   this.matrices = matrices;
   this.matrixIndex = 0;
+  this.collided = false;
 
   this.getCurrentMatrix = function() {
     return that.matrices[that.matrixIndex];
@@ -51,7 +52,7 @@ var Shape = function(matrices,blockSize) {
 
   this.blockSize = blockSize;
 
-  var graphics = new graphicsComponent.ShapeGraphicsComponent(this,this.blockSize);
+  var graphics = new graphicsComponent.ShapeGraphicsComponent(this);
   this.components = {
     physics: physics,
     graphics: graphics

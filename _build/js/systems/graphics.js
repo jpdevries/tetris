@@ -136,7 +136,12 @@ GraphicsSystem.prototype.tick = function() {
 
   //let snapPoint = (point,freq) => (Math.floor(point / freq) * freq) + ((point % freq >= (freq / 2)) ? freq : 0);
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.globalCompositeOperation = "multiply";
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height); // right here
+
+  //ctx.fillStyle = 'orange';
+  //ctx.fillRect(canvas.width/2,0,0.02*4 * canvas.height,canvas.height);
 
   this.paintWell();
 
@@ -166,12 +171,9 @@ GraphicsSystem.prototype.tick = function() {
       //console.log('COLLIDE!');
       this.emit(collision.WOULD_COLLIDE);
     }
-
   }
 
   ctx.restore();
-
-  //if(this.running) window.requestAnimationFrame(this.tick.bind(this));
 }
 
 

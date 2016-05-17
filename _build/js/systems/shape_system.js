@@ -4,6 +4,7 @@ var line = require('../entities/line');
 var lshape = require('../entities/lshape');
 var square = require('../entities/square');
 var sshape = require('../entities/sshape');
+var tshape = require('../entities/tshape');
 var tee = require('../entities/tee');
 var zshape = require('../entities/zshape');
 
@@ -36,7 +37,8 @@ ShapeSystem.prototype.tick = function() {
     new lshape.LShape(),
     new square.Square(),
     new tee.Tee(),
-    new zshape.ZShape()
+    new zshape.ZShape(),
+    new tshape.TShape()
   ];
 
   var newShape = possibleShapes[Math.round(Math.random() * (possibleShapes.length-1))];

@@ -3,7 +3,7 @@
 
 var ShapeGraphicsComponent = function ShapeGraphicsComponent(entity, color, rotation, blockSize) {
   this.entity = entity;
-  this.color = typeof color == 'undefined' ? 'black' : color;
+  this.color = typeof color == 'undefined' ? randomColor() : color;
   this.rotation = typeof rotation == 'undefined' ? 0 : rotation;
   this.blockSize = typeof blockSize == 'undefined' ? 1 : blockSize;
   this.rows = [];
@@ -14,10 +14,12 @@ ShapeGraphicsComponent.prototype.getPosition = function () {
 };
 
 ShapeGraphicsComponent.prototype.draw = function (context) {
+  var canvas = document.getElementById("canvas");
   var position = this.entity.components.physics.position;
 
   var tiles = this.entity.getCurrentMatrix(),
-      blockSize = this.blockSize;
+      blockSize = this.blockSize,
+      color = this.color;
 
   //console.log(this.entity.matrixIndex);
 
@@ -48,25 +50,14 @@ ShapeGraphicsComponent.prototype.draw = function (context) {
   this.rows = rows;
 
   return rows;
-
-  /*
-  context.save();
-  context.translate(position.x, position.y);
-   for(var i = 0; i < tiles.length; i+=4) { // go through the 16 tiles 4 at a time
-    (function(tiles){
-      context.save();
-      for(var i = 0; i < tiles.length; i++) {
-        context.fillStyle = (tiles[i]) ? 'red' : 'transparent';
-        context.fillRect(0, 0, blockSize, blockSize); // paint tile
-        context.translate(blockSize,0); // move to the right (next column)
-      }
-      context.restore(); // back to the left
-    })(tiles.slice(i,i+4)); // slice out the next four blocks and loop through them one by one
-    context.translate(0,blockSize); // move down (next row)
-  }
-   context.restore();
-  */
 };
+
+function randomColor() {
+  var colors = ['#fee109', '#ff6113', '#0036fb', '#fe0005', '#31cbff', '#38cd00'];
+
+  return colors[Math.round(Math.random() * (colors.length - 1))];
+  //return '#'+Math.floor(Math.random()*16777215).toString(16);
+}
 
 exports.ShapeGraphicsComponent = ShapeGraphicsComponent;
 
@@ -92,11 +83,7 @@ var PhysicsComponent = function PhysicsComponent(entity) {
 
 PhysicsComponent.prototype.update = function () {
     //this.position.x += this.velocity.x * delta;
-
     this.position.y = Math.max(this.position.y - 1, -4);
-    //this.position.x = 0;
-    //this.position.y = 1;
-    //this.position.y = this.position.y;
 };
 
 exports.PhysicsComponent = PhysicsComponent;
@@ -157,6 +144,7 @@ var Shape = function Shape(matrices, blockSize) {
 
   this.matrices = matrices;
   this.matrixIndex = 0;
+  this.collided = false;
 
   this.getCurrentMatrix = function () {
     return that.matrices[that.matrixIndex];
@@ -168,7 +156,7 @@ var Shape = function Shape(matrices, blockSize) {
 
   this.blockSize = blockSize;
 
-  var graphics = new graphicsComponent.ShapeGraphicsComponent(this, this.blockSize);
+  var graphics = new graphicsComponent.ShapeGraphicsComponent(this);
   this.components = {
     physics: physics,
     graphics: graphics
@@ -241,6 +229,18 @@ exports.Tee = Tee;
 
 var shape = require('./shape');
 
+function TShape() {}
+
+TShape.prototype = new shape.Shape([[1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0], [0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0], [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0], [1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0]]);
+TShape.prototype.constructor = TShape;
+
+exports.TShape = TShape;
+
+},{"./shape":6}],11:[function(require,module,exports){
+'use strict';
+
+var shape = require('./shape');
+
 function ZShape() {}
 
 ZShape.prototype = new shape.Shape([[0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0]]);
@@ -248,7 +248,7 @@ ZShape.prototype.constructor = ZShape;
 
 exports.ZShape = ZShape;
 
-},{"./shape":6}],11:[function(require,module,exports){
+},{"./shape":6}],12:[function(require,module,exports){
 'use strict';
 
 Math.randomRange = function (min, max) {
@@ -270,7 +270,7 @@ document.addEventListener('DOMContentLoaded', function () {
   app.run();
 });
 
-},{"./tetris":17}],12:[function(require,module,exports){
+},{"./tetris":18}],13:[function(require,module,exports){
 'use strict';
 
 var CollisionSystem = function CollisionSystem(well) {
@@ -320,7 +320,7 @@ CollisionSystem.prototype.wouldCollide = function (position, blocks) {
 
 exports.CollisionSystem = CollisionSystem;
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 
 var collisionSystem = require('./collision_system');
@@ -458,7 +458,12 @@ GraphicsSystem.prototype.tick = function () {
 
   //let snapPoint = (point,freq) => (Math.floor(point / freq) * freq) + ((point % freq >= (freq / 2)) ? freq : 0);
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.globalCompositeOperation = "multiply";
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height); // right here
+
+  //ctx.fillStyle = 'orange';
+  //ctx.fillRect(canvas.width/2,0,0.02*4 * canvas.height,canvas.height);
 
   this.paintWell();
 
@@ -491,13 +496,11 @@ GraphicsSystem.prototype.tick = function () {
   }
 
   ctx.restore();
-
-  //if(this.running) window.requestAnimationFrame(this.tick.bind(this));
 };
 
 exports.GraphicsSystem = GraphicsSystem;
 
-},{"./collision_system":12,"events":18,"util":22}],14:[function(require,module,exports){
+},{"./collision_system":13,"events":19,"util":23}],15:[function(require,module,exports){
 'use strict';
 
 var InputSystem = function InputSystem(tetris, canvas) {
@@ -548,7 +551,7 @@ InputSystem.prototype.onkeyup = function (e) {
 
 exports.InputSystem = InputSystem;
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 var PhysicsSystem = function PhysicsSystem(entities) {
@@ -562,9 +565,10 @@ PhysicsSystem.prototype.run = function () {
 };
 
 PhysicsSystem.prototype.tick = function () {
+    //this.entities.filter(function(val) { return val !== null; }).join(", ");
     for (var i = 0; i < this.entities.length; i++) {
         var entity = this.entities[i];
-        if (!'physics' in entity.components) continue;
+        if (!entity || !'physics' in entity.components || entity.collided) continue;
 
         entity.components.physics.update();
     }
@@ -572,7 +576,7 @@ PhysicsSystem.prototype.tick = function () {
 
 exports.PhysicsSystem = PhysicsSystem;
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 var shape = require('../entities/shape');
@@ -581,6 +585,7 @@ var line = require('../entities/line');
 var lshape = require('../entities/lshape');
 var square = require('../entities/square');
 var sshape = require('../entities/sshape');
+var tshape = require('../entities/tshape');
 var tee = require('../entities/tee');
 var zshape = require('../entities/zshape');
 
@@ -607,7 +612,7 @@ ShapeSystem.prototype.pause = function () {
 };
 
 ShapeSystem.prototype.tick = function () {
-  var possibleShapes = [new jshape.JShape(), new line.Line(), new lshape.LShape(), new square.Square(), new tee.Tee(), new zshape.ZShape()];
+  var possibleShapes = [new jshape.JShape(), new line.Line(), new lshape.LShape(), new square.Square(), new tee.Tee(), new zshape.ZShape(), new tshape.TShape()];
 
   var newShape = possibleShapes[Math.round(Math.random() * (possibleShapes.length - 1))];
   //newShape.components.physics.position.y = 24;
@@ -619,7 +624,7 @@ ShapeSystem.prototype.tick = function () {
 
 exports.ShapeSystem = ShapeSystem;
 
-},{"../entities/jshape":3,"../entities/line":4,"../entities/lshape":5,"../entities/shape":6,"../entities/square":7,"../entities/sshape":8,"../entities/tee":9,"../entities/zshape":10}],17:[function(require,module,exports){
+},{"../entities/jshape":3,"../entities/line":4,"../entities/lshape":5,"../entities/shape":6,"../entities/square":7,"../entities/sshape":8,"../entities/tee":9,"../entities/tshape":10,"../entities/zshape":11}],18:[function(require,module,exports){
 'use strict';
 
 var canvas = document.getElementById('canvas'),
@@ -673,7 +678,7 @@ Tetris.prototype.run = function () {
 
 exports.Tetris = Tetris;
 
-},{"./entities/jshape":3,"./entities/line":4,"./entities/lshape":5,"./entities/shape":6,"./entities/square":7,"./entities/sshape":8,"./entities/tee":9,"./entities/zshape":10,"./systems/graphics":13,"./systems/input":14,"./systems/physics":15,"./systems/shape_system":16}],18:[function(require,module,exports){
+},{"./entities/jshape":3,"./entities/line":4,"./entities/lshape":5,"./entities/shape":6,"./entities/square":7,"./entities/sshape":8,"./entities/tee":9,"./entities/zshape":11,"./systems/graphics":14,"./systems/input":15,"./systems/physics":16,"./systems/shape_system":17}],19:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -976,7 +981,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -1001,7 +1006,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -1094,14 +1099,14 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -1691,4 +1696,4 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":21,"_process":20,"inherits":19}]},{},[11]);
+},{"./support/isBuffer":22,"_process":21,"inherits":20}]},{},[12]);
