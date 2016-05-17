@@ -3,6 +3,7 @@ var ShapeGraphicsComponent = function(entity,color,rotation,blockSize) {
   this.color = typeof(color)  == 'undefined' ? 'black' : color;
   this.rotation = typeof(rotation) == 'undefined' ? 0 : rotation;
   this.blockSize = typeof(blockSize) == 'undefined' ? 1 : blockSize;
+  this.rows = [];
 }
 
 ShapeGraphicsComponent.prototype.getPosition = function() {
@@ -39,6 +40,8 @@ ShapeGraphicsComponent.prototype.draw = function (context) {
   }
 
   context.restore();
+
+  this.rows = rows;
 
   return rows;
 

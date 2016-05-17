@@ -24,9 +24,16 @@ var Tetris = function() {
   this.input = new inputSystem.InputSystem(this,canvas);
   this.shapes = new shapeSystem.ShapeSystem(this.entities,canvas);
 
-  this.graphics.on(this.graphics.WOULD_COLLIDE,function(){
+  this.graphics.on(this.graphics.WOULD_COLLIDE,() => { // es6 arrow function with lexical this
 			console.log('WOULD_COLLIDE!!!! 28');
-      this.stop();
+      this.graphics.stop();
+      this.graphics.addToWell(this.entities[0]);
+
+      this.entities = this.graphics.entities = this.physics.entities = this.input.entities = this.shapes.entities = [];
+
+      this.graphics.step();
+      this.shapes.dropShape();
+      //this.graphics.run();
   });
 };
 

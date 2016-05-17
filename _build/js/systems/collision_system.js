@@ -1,6 +1,5 @@
-var CollisionSystem = function(entities,well) {
+var CollisionSystem = function(well) {
   //console.log('CollisionSystem');
-    this.entities = entities;
     this.well = well;
     this.interval = null;
     this.WOULD_COLLIDE = 'wouldcollide';
@@ -39,20 +38,5 @@ CollisionSystem.prototype.wouldCollide = function(position,blocks) {
 
   return false;
 };
-
-/*
-CollisionSystem.prototype.run = function() {
-    // Run the update loop
-    this.interval = window.setInterval(this.tick.bind(this), 1000 /12);
-};
-
-CollisionSystem.prototype.tick = function() {
-    //console.log(this.entities.length);
-    for (var i=0; i<this.entities.length; i++) {
-        var entity = this.entities[i];
-
-    }
-};
-*/
 
 exports.CollisionSystem = CollisionSystem;

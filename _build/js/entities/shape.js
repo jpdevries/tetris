@@ -68,7 +68,7 @@ var Shape = function(matrices,blockSize) {
     return physics.position;
   };
   this.getBlockCoords = function() {
-    return that.blockCoords;
+    return that.components.graphics.rows;
   };
   this.translate = function(x,y) {
     that.blockCoords.x += x;
