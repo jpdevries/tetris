@@ -1,11 +1,15 @@
 var PhysicsSystem = function(entities) {
     this.entities = entities;
-    this.interval = null; 
+    this.interval = null;
 };
 
 PhysicsSystem.prototype.run = function() {
     // Run the update loop
     this.interval = window.setInterval(this.tick.bind(this), 1000 /12);
+};
+
+PhysicsSystem.prototype.stop = function() {
+  clearInterval(this.interval);
 };
 
 PhysicsSystem.prototype.tick = function() {

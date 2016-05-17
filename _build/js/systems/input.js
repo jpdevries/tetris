@@ -15,7 +15,7 @@ InputSystem.prototype.onClick = function() {
 }
 
 InputSystem.prototype.onkeydown = function(e) {
-  console.log('keydown');
+  console.log('keydown',e.keyCode);
 
 
 
@@ -34,6 +34,16 @@ InputSystem.prototype.onkeydown = function(e) {
 
     case 37: // left
     this.tetris.shapes.currentShape.translate(-1,0);
+    break;
+
+    case 68: //d
+    if(this.tetris.graphics.running) {
+      this.tetris.graphics.stop();
+      this.tetris.physics.stop();
+    } else {
+      this.tetris.graphics.run();
+      this.tetris.physics.run();
+    }
     break;
   }
 };

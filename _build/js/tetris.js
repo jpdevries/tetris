@@ -27,13 +27,17 @@ var Tetris = function() {
   this.graphics.on(this.graphics.WOULD_COLLIDE,() => { // es6 arrow function with lexical this
 			console.log('WOULD_COLLIDE!!!! 28');
       this.graphics.stop();
+      this.physics.stop();
       this.graphics.addToWell(this.entities[0]);
 
-      this.entities = this.graphics.entities = this.physics.entities = this.input.entities = this.shapes.entities = [];
+      this.entities.length = 0;
 
-      this.graphics.step();
+      //this.graphics.step();
       this.shapes.dropShape();
+      this.graphics.run();
+      this.physics.run();
       //this.graphics.run();
+      console.log(this.entities);
   });
 };
 

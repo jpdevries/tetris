@@ -30,7 +30,7 @@ ShapeGraphicsComponent.prototype.draw = function (context) {
     (function(tiles,row){
       context.save();
       for(var i = 0; i < tiles.length; i++) {
-        context.fillStyle = (tiles[i]) ? 'red' : 'pink';
+        context.fillStyle = (tiles[i]) ? 'red' : 'transparent';
         row.push((tiles[i]) ? 1 : 0);
         context.fillRect(0, 0, blockSize, blockSize); // paint tile
         context.translate(blockSize,0); // move to the right (next column)

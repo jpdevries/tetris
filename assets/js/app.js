@@ -34,7 +34,7 @@ ShapeGraphicsComponent.prototype.draw = function (context) {
     (function (tiles, row) {
       context.save();
       for (var i = 0; i < tiles.length; i++) {
-        context.fillStyle = tiles[i] ? 'red' : 'pink';
+        context.fillStyle = tiles[i] ? 'red' : 'transparent';
         row.push(tiles[i] ? 1 : 0);
         context.fillRect(0, 0, blockSize, blockSize); // paint tile
         context.translate(blockSize, 0); // move to the right (next column)
@@ -377,7 +377,7 @@ GraphicsSystem.prototype.handleResize = function () {
 };
 
 GraphicsSystem.prototype.addToWell = function (shape) {
-  console.log('addToWell', shape, shape.getPosition(), shape.getBlockCoords());
+  //console.log('addToWell',shape,shape.getPosition(),shape.getBlockCoords());
 
   var position = shape.getPosition();
   var rows = shape.getBlockCoords();
@@ -385,7 +385,7 @@ GraphicsSystem.prototype.addToWell = function (shape) {
 
   var r = 0;
   for (var i = position.y; i < position.y + 4; i++) {
-    console.log(i);
+    //console.log(i);
     if (i >= 0) {
       //console.log(i,well[i],rows[r]);
       well[i] = function (wellRow, blocks) {
@@ -401,6 +401,8 @@ GraphicsSystem.prototype.addToWell = function (shape) {
 };
 
 GraphicsSystem.prototype.run = function () {
+  if (this.running) return;
+  console.log('run');
   this.interval = window.setInterval(this.tick.bind(this), 1000 / 12);
   //Run the graphics rendering loop. requestAnimationFrame runs ever 1/60th of a second.
   this.running = true;
@@ -418,7 +420,7 @@ GraphicsSystem.prototype.stop = function () {
 };
 
 GraphicsSystem.prototype.paintWell = function () {
-  console.log('paintWell', this.well);
+  //console.log('paintWell',this.well);
   var canvas = this.canvas;
   var ctx = this.context,
       collision = this.collision;
@@ -458,26 +460,23 @@ GraphicsSystem.prototype.tick = function () {
 
   //let snapPoint = (point,freq) => (Math.floor(point / freq) * freq) + ((point % freq >= (freq / 2)) ? freq : 0);
 
-  ctx.globalCompositeOperation = "multiply";
+  //ctx.globalCompositeOperation = "multiply";
 
   ctx.clearRect(0, 0, canvas.width, canvas.height); // right here
-
-  //ctx.fillStyle = 'orange';
-  //ctx.fillRect(canvas.width/2,0,0.02*4 * canvas.height,canvas.height);
-
-  this.paintWell();
 
   ctx.save();
 
   ctx.translate(0, canvas.height);
   ctx.scale(canvas.height / this.blocksPerRow, -canvas.height / this.blocksPerRow);
 
-  ctx.globalCompositeOperation = 'difference';
+  //ctx.globalCompositeOperation = 'difference';
+
+  this.paintWell();
 
   //ctx.fillStyle = 'green';
   //ctx.fillStyle = '#'+Math.floor(Math.random()*16777215).toString(16);
   //ctx.fillRect(0,0,this.blocksPerRow,1);
-
+  var wouldCollide = false;
   for (var i = 0; i < this.entities.length; i++) {
     var entity = this.entities[i];
     if (!'graphics' in entity.components) continue;
@@ -488,14 +487,15 @@ GraphicsSystem.prototype.tick = function () {
 
     //console.log('blocks',blocks);
     //console.log(blocks);
-    var wouldCollide = collision.wouldCollide(position, blocks);
-    if (wouldCollide || position.y < -5) {
-      //console.log('COLLIDE!');
-      this.emit(collision.WOULD_COLLIDE);
-    }
+    wouldCollide = collision.wouldCollide(position, blocks);
   }
 
   ctx.restore();
+
+  if (wouldCollide) {
+    //console.log('COLLIDE!');
+    this.emit(collision.WOULD_COLLIDE);
+  }
 };
 
 exports.GraphicsSystem = GraphicsSystem;
@@ -520,7 +520,7 @@ InputSystem.prototype.onClick = function () {
 };
 
 InputSystem.prototype.onkeydown = function (e) {
-  console.log('keydown');
+  console.log('keydown', e.keyCode);
 
   switch (e.keyCode) {
     case 38:
@@ -542,6 +542,17 @@ InputSystem.prototype.onkeydown = function (e) {
       // left
       this.tetris.shapes.currentShape.translate(-1, 0);
       break;
+
+    case 68:
+      //d
+      if (this.tetris.graphics.running) {
+        this.tetris.graphics.stop();
+        this.tetris.physics.stop();
+      } else {
+        this.tetris.graphics.run();
+        this.tetris.physics.run();
+      }
+      break;
   }
 };
 
@@ -562,6 +573,10 @@ var PhysicsSystem = function PhysicsSystem(entities) {
 PhysicsSystem.prototype.run = function () {
     // Run the update loop
     this.interval = window.setInterval(this.tick.bind(this), 1000 / 12);
+};
+
+PhysicsSystem.prototype.stop = function () {
+    clearInterval(this.interval);
 };
 
 PhysicsSystem.prototype.tick = function () {
@@ -659,13 +674,17 @@ var Tetris = function Tetris() {
     // es6 arrow function with lexical this
     console.log('WOULD_COLLIDE!!!! 28');
     _this.graphics.stop();
+    _this.physics.stop();
     _this.graphics.addToWell(_this.entities[0]);
 
-    _this.entities = _this.graphics.entities = _this.physics.entities = _this.input.entities = _this.shapes.entities = [];
+    _this.entities.length = 0;
 
-    _this.graphics.step();
+    //this.graphics.step();
     _this.shapes.dropShape();
+    _this.graphics.run();
+    _this.physics.run();
     //this.graphics.run();
+    console.log(_this.entities);
   });
 };
 
